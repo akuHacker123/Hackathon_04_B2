@@ -1,42 +1,37 @@
 'use client';
 
 import React, { useState } from 'react';
-import { createTransaction } from '@/lib/actions/transactions';
+import {
+  createTransaction,
+  updateTransaction,
+  TransactionDTO,
+} from '@/lib/actions/transactions';
 
 interface TransactionFormModalProps {
   isOpen: boolean;
+  initialData?: TransactionDTO | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export default function TransactionFormModal({
-  isOpen,
+function TransactionFormModalInner({
+  initialData,
   onClose,
   onSuccess,
-}: TransactionFormModalProps) {
+}: Omit<TransactionFormModalProps, 'isOpen'>) {
   const today = new Date().toISOString().split('T')[0];
 
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [transactionDate, setTransactionDate] = useState(today);
-  const [notes, setNotes] = useState('');
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
+  const [type, setType] = useState<'income' | 'expense'>(initialData?.type || 'expense');
+  const [transactionDate, setTransactionDate] = useState(initialData?.transactionDate || today);
+  const [notes, setNotes] = useState(initialData?.notes || '');
 
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
-  if (!isOpen) return null;
-
-  const resetForm = () => {
-    setTitle('');
-    setAmount('');
-    setType('expense');
-    setTransactionDate(today);
-    setNotes('');
-    setGeneralError(null);
-    setFieldErrors({});
-  };
+  const isEditMode = Boolean(initialData && initialData.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,23 +40,26 @@ export default function TransactionFormModal({
     setFieldErrors({});
 
     try {
-      const res = await createTransaction({
+      const payload = {
         title,
         amount,
         type,
         transactionDate,
         notes: notes || null,
-      });
+      };
+
+      const res = isEditMode && initialData
+        ? await updateTransaction(initialData.id, payload)
+        : await createTransaction(payload);
 
       if (res.success) {
-        resetForm();
         if (onSuccess) onSuccess();
         onClose();
       } else {
         if (res.status === 422 && res.errors) {
           setFieldErrors(res.errors);
         } else {
-          setGeneralError(res.error || 'Gagal menambahkan transaksi.');
+          setGeneralError(res.error || 'Gagal menyimpan transaksi.');
         }
       }
     } catch {
@@ -76,7 +74,7 @@ export default function TransactionFormModal({
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between border-b pb-3 dark:border-zinc-800">
           <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Tambah Transaksi Baru
+            {isEditMode ? 'Ubah Transaksi' : 'Tambah Transaksi Baru'}
           </h2>
           <button
             type="button"
@@ -206,11 +204,21 @@ export default function TransactionFormModal({
               disabled={loading}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              {loading ? 'Menyimpan...' : 'Simpan Transaksi'}
+              {loading
+                ? 'Menyimpan...'
+                : isEditMode
+                ? 'Simpan Perubahan'
+                : 'Simpan Transaksi'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
+}
+
+export default function TransactionFormModal(props: TransactionFormModalProps) {
+  if (!props.isOpen) return null;
+  const key = props.initialData?.id || 'new-transaction';
+  return <TransactionFormModalInner key={key} {...props} />;
 }
