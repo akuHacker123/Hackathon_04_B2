@@ -128,3 +128,69 @@ export async function createTransaction(
     };
   }
 }
+
+export interface TransactionDTO {
+  id: string;
+  userId: string;
+  title: string;
+  amount: number;
+  type: 'income' | 'expense';
+  transactionDate: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+/**
+ * FR-09: Melihat daftar seluruh transaksi pengguna
+ * Aturan Bisnis & Validasi:
+ * - BR-02: Terikat mutlak pada user_id pengguna aktif
+ * - Urutan kronologis terbalik (transaksi terbaru di atas)
+ * - BR-08: Sanitasi query via Prisma ORM
+ */
+export async function getTransactions(): Promise<ActionResponse<TransactionDTO[]>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.id) {
+      return {
+        success: false,
+        error: 'Tidak terautentikasi. Silakan login terlebih dahulu.',
+        status: 401,
+      };
+    }
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: [
+        { transactionDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    const formatted: TransactionDTO[] = transactions.map((t) => ({
+      id: t.id,
+      userId: t.userId,
+      title: t.title,
+      amount: Number(t.amount),
+      type: t.type as 'income' | 'expense',
+      transactionDate: t.transactionDate.toISOString().split('T')[0],
+      notes: t.notes,
+      createdAt: t.createdAt.toISOString(),
+    }));
+
+    return {
+      success: true,
+      data: formatted,
+      status: 200,
+    };
+  } catch (err) {
+    console.error('Error getTransactions:', err);
+    return {
+      success: false,
+      error: 'Terjadi kesalahan saat memuat daftar transaksi.',
+      status: 500,
+    };
+  }
+}
+
