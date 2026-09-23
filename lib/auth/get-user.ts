@@ -1,3 +1,7 @@
+import { cookies } from "next/headers";
+
+import { getSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth/session";
+
 export interface AuthUser {
   id: string;
   name: string;
