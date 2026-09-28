@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/get-user';
 import { getDashboardData } from '@/lib/actions/dashboard';
-import { getMonthlyBudget, getCurrentMonthKey, MonthlyBudgetData } from '@/lib/actions/budget';
+import { getMonthlyBudget } from '@/lib/actions/budget';
+import { getCurrentMonthKey, MonthlyBudgetData } from '@/lib/utils/budget';
 import DashboardView from '@/components/dashboard/DashboardView';
+
 import { AppLayout } from '@/components/layout/AppLayout';
 
 export default async function DashboardPage() {

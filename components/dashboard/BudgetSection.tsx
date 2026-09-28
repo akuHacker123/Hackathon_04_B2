@@ -2,10 +2,11 @@
 
 import React, { useState, useTransition } from 'react';
 import {
-  MonthlyBudgetData,
   getMonthlyBudget,
   saveMonthlyBudget,
 } from '@/lib/actions/budget';
+import { MonthlyBudgetData } from '@/lib/utils/budget';
+
 
 interface BudgetSectionProps {
   initialBudgetData: MonthlyBudgetData;
