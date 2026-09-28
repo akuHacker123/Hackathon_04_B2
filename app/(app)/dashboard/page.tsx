@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login');
 
-  const currentMonth = getCurrentMonthKey();
+  const currentMonth = await getCurrentMonthKey();
   const [dashboard, budgetResult] = await Promise.all([
     getDashboardData(),
     getMonthlyBudget(currentMonth),

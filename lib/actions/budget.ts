@@ -31,7 +31,7 @@ export interface SaveMonthlyBudgetInput {
 /**
  * Format string bulan YYYY-MM menjadi rentang Date UTC untuk hari pertama dan bulan berikutnya.
  */
-export function parseMonthRange(monthStr: string): {
+function parseMonthRange(monthStr: string): {
   startDate: Date;
   nextMonthDate: Date;
   monthKey: string;
@@ -58,7 +58,7 @@ export function parseMonthRange(monthStr: string): {
 /**
  * Mendapatkan string bulan kalender saat ini dalam format YYYY-MM.
  */
-export function getCurrentMonthKey(): string {
+export async function getCurrentMonthKey(): Promise<string> {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -149,7 +149,7 @@ export async function getMonthlyBudget(
       };
     }
 
-    const targetMonth = month || getCurrentMonthKey();
+    const targetMonth = month || (await getCurrentMonthKey());
     let normalizedMonth: string;
     try {
       const parsed = parseMonthRange(targetMonth);
