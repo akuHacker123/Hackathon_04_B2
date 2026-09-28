@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Expense Tracker
 
-## Getting Started
+Aplikasi pencatatan pemasukan, pengeluaran, dan anggaran bulanan. Dibangun dengan Next.js, Prisma, dan PostgreSQL.
 
-First, run the development server:
+## Menjalankan di komputer lokal
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Prasyarat
+
+- Node.js yang kompatibel dengan versi Next.js di proyek ini.
+- PostgreSQL yang aktif.
+- Database PostgreSQL kosong untuk proyek ini, misalnya `expense_tracker`.
+
+### 1. Pasang dependency
+
+Buka PowerShell di folder proyek:
+
+```powershell
+cd "Hackathon_04_B2"
+npm ci
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Atur koneksi database
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Salin template environment:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+Copy-Item .env.example .env
+```
 
-## Learn More
+Edit `.env` dan isi `DATABASE_URL` sesuai konfigurasi PostgreSQL lokal. Contoh:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL="postgresql://postgres:password_kamu@localhost:5432/expense_tracker?schema=public"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Pastikan PostgreSQL aktif dan database `expense_tracker` sudah dibuat.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Jalankan semua migration
 
-## Deploy on Vercel
+```powershell
+npx prisma migrate deploy
+npx prisma migrate status
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Pastikan status menunjukkan semua migration sudah diterapkan. Repo memiliki tiga migration. Jalankan pertama kali pada database kosong khusus proyek ini; migration kedua mengganti tabel `User` awal dengan skema aplikasi.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Generate Prisma Client
+
+```powershell
+npx prisma generate
+```
+
+### 5. (Opsional) Tambahkan data demo
+
+Seed hanya tersedia untuk development dan perlu diaktifkan secara eksplisit:
+
+```powershell
+$env:ALLOW_DEMO_SEED = "true"
+npx prisma db seed
+Remove-Item Env:ALLOW_DEMO_SEED
+```
+
+Akun demo:
+
+- `expense.demo.a@example.invalid`
+- `expense.demo.b@example.invalid`
+- Password keduanya: `ExpenseDemo!2026`
+
+### 6. Jalankan aplikasi
+
+```powershell
+npm run dev
+```
+
+Buka [http://localhost:3000](http://localhost:3000). Biarkan terminal tetap berjalan selama aplikasi digunakan. Hentikan server dengan `Ctrl+C`.
+
+## Catatan database
+
+- Jangan gunakan `npx prisma migrate reset` pada database yang berisi data karena perintah tersebut menghapus data.
+- Jika koneksi gagal, pastikan PostgreSQL aktif dan host, port, nama database, username, serta password pada `.env` benar.
