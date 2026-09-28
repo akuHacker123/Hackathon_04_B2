@@ -14,3 +14,13 @@ export function isValidCsrfToken(submittedToken: string, cookieToken: string | u
 
   return submitted.length === stored.length && timingSafeEqual(submitted, stored);
 }
+
+export function isSameOriginRequest(origin: string | null, host: string | null): boolean {
+  if (!origin || !host) return false;
+
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}

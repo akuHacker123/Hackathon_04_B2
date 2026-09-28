@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { registerAction } from "../actions";
 import { RegisterForm } from "./RegisterForm";
+import { getCurrentUser } from "@/lib/auth/get-user";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  if (await getCurrentUser()) redirect("/dashboard");
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6">
       <section className="w-full rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
