@@ -1,9 +1,16 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import BudgetSection from './BudgetSection';
+import { MonthlyBudgetData } from '@/lib/actions/budget';
+
 type Transaction = {
   id: string;
   title: string;
   amount: string;
   type: 'income' | 'expense';
-  transactionDate: Date;
+  transactionDate: Date | string;
 };
 
 type DashboardViewProps = {
@@ -13,13 +20,17 @@ type DashboardViewProps = {
   totalExpense: string;
   isDeficit: boolean;
   recentTransactions: Transaction[];
+  initialBudgetData: MonthlyBudgetData;
 };
 
-function rupiah(amount: string) {
+function formatRupiah(amount: string) {
   const [integer, fraction = ''] = amount.split('.');
   const negative = integer.startsWith('-');
+  const cleanInt = negative ? integer.slice(1) : integer;
   const decimals = fraction.replace(/0+$/, '');
-  const formattedInteger = new Intl.NumberFormat('id-ID').format(BigInt(negative ? integer.slice(1) : integer));
+  const formattedInteger = new Intl.NumberFormat('id-ID').format(
+    BigInt(cleanInt || '0')
+  );
   return `${negative ? '-' : ''}Rp ${formattedInteger}${decimals ? `,${decimals}` : ''}`;
 }
 
@@ -30,64 +41,199 @@ export default function DashboardView({
   totalExpense,
   isDeficit,
   recentTransactions,
+  initialBudgetData,
 }: DashboardViewProps) {
   const summaries = [
-    { label: 'Saldo saat ini', value: balance, color: 'text-slate-950' },
-    { label: 'Total pemasukan', value: totalIncome, color: 'text-emerald-700' },
-    { label: 'Total pengeluaran', value: totalExpense, color: 'text-rose-700' },
+    {
+      label: 'Saldo Saat Ini',
+      value: balance,
+      description: isDeficit ? 'Defisit keuangan' : 'Akumulasi saldo bersih',
+    },
+    {
+      label: 'Total Pemasukan',
+      value: totalIncome,
+      description: 'Seluruh riwayat pemasukan',
+    },
+    {
+      label: 'Total Pengeluaran',
+      value: totalExpense,
+      description: 'Seluruh riwayat pengeluaran',
+    },
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-900 sm:px-8">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <header>
-          <p className="text-sm font-medium text-slate-500">Ringkasan keuangan</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Halo, {name}</h1>
-          <p className="mt-2 text-slate-600">Pantau kondisi keuanganmu hari ini.</p>
-        </header>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Ringkasan Keuangan
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Halo, {name}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            Pantau kondisi saldo, anggaran bulanan, dan transaksi terbaru Anda.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/transactions"
+            className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 shadow-sm transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            Kelola Transaksi &rarr;
+          </Link>
+        </div>
+      </header>
 
-        {isDeficit && (
-          <aside role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950">
-            <p className="font-semibold">Saldo kamu sedang defisit</p>
-            <p className="mt-1 text-sm">Pengeluaran lebih besar daripada pemasukan. Periksa kembali transaksi terbaru.</p>
-          </aside>
-        )}
-
-        <section aria-label="Ringkasan saldo" className="grid gap-4 sm:grid-cols-3">
-          {summaries.map(({ label, value, color }) => (
-            <article key={label} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-sm font-medium text-slate-500">{label}</h2>
-              <p className={`mt-3 text-2xl font-semibold tracking-tight ${color}`}>{rupiah(value)}</p>
-            </article>
-          ))}
-        </section>
-
-        <section aria-labelledby="recent-transactions" className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-6 py-5">
-            <h2 id="recent-transactions" className="font-semibold">Transaksi terbaru</h2>
-            <p className="mt-1 text-sm text-slate-500">Lima transaksi terakhir milikmu.</p>
+      {/* Alert Saldo Defisit (BR-04) */}
+      {isDeficit && (
+        <aside
+          role="status"
+          className="rounded-2xl border border-zinc-900 bg-zinc-900 p-5 text-zinc-100 shadow-sm dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-900"
+        >
+          <div className="flex items-start gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="mt-0.5 h-5 w-5 shrink-0 text-zinc-300 dark:text-zinc-700"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div>
+              <p className="font-semibold text-base">Perhatian: Saldo Anda Sedang Defisit</p>
+              <p className="mt-1 text-sm text-zinc-300 dark:text-zinc-700 leading-relaxed">
+                Total pengeluaran akumulatif Anda telah melampaui total pemasukan. Pertimbangkan untuk membatasi pengeluaran non-esensial dan menyesuaikan anggaran bulanan Anda.
+              </p>
+            </div>
           </div>
-          {recentTransactions.length === 0 ? (
-            <p className="px-6 py-10 text-center text-sm text-slate-500">Belum ada transaksi.</p>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {recentTransactions.map((transaction) => (
-                <li key={transaction.id} className="flex items-center justify-between gap-4 px-6 py-4">
+        </aside>
+      )}
+
+      {/* Summary Cards Grid */}
+      <section aria-label="Ringkasan Saldo" className="grid gap-4 sm:grid-cols-3">
+        {summaries.map(({ label, value, description }) => (
+          <article
+            key={label}
+            className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {label}
+            </p>
+            <p className="mt-3 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {formatRupiah(value)}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+          </article>
+        ))}
+      </section>
+
+      {/* Monthly Budget Management Flow (FR-16, FR-17, FR-18, FR-19) */}
+      <BudgetSection initialBudgetData={initialBudgetData} />
+
+      {/* Recent Transactions List (FR-06, FR-09) */}
+      <section
+        aria-labelledby="recent-transactions-heading"
+        className="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+      >
+        <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-5 dark:border-zinc-800">
+          <div>
+            <h2
+              id="recent-transactions-heading"
+              className="font-bold text-lg tracking-tight text-zinc-900 dark:text-zinc-100"
+            >
+              Transaksi Terbaru
+            </h2>
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+              Lima transaksi terakhir yang dicatat pada akun Anda.
+            </p>
+          </div>
+          <Link
+            href="/transactions"
+            className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Lihat Semua &rarr;
+          </Link>
+        </div>
+
+        {recentTransactions.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Belum ada transaksi yang dicatat.
+            </p>
+            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+              Mulai catat transaksi pemasukan atau pengeluaran Anda.
+            </p>
+            <div className="mt-4">
+              <Link
+                href="/transactions"
+                className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-black dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+              >
+                + Tambah Transaksi Pertama
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {recentTransactions.map((transaction) => {
+              const txDate =
+                typeof transaction.transactionDate === 'string'
+                  ? new Date(transaction.transactionDate)
+                  : transaction.transactionDate;
+
+              return (
+                <li
+                  key={transaction.id}
+                  className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30 transition-colors"
+                >
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{transaction.title}</p>
-                    <time className="mt-1 block text-sm text-slate-500" dateTime={transaction.transactionDate.toISOString().slice(0, 10)}>
-                      {transaction.transactionDate.toLocaleDateString('id-ID', { timeZone: 'UTC', dateStyle: 'medium' })}
+                    <p className="truncate font-semibold text-sm text-zinc-900 dark:text-zinc-100">
+                      {transaction.title}
+                    </p>
+                    <time
+                      className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400"
+                      dateTime={
+                        txDate instanceof Date && !isNaN(txDate.getTime())
+                          ? txDate.toISOString().slice(0, 10)
+                          : ''
+                      }
+                    >
+                      {txDate instanceof Date && !isNaN(txDate.getTime())
+                        ? txDate.toLocaleDateString('id-ID', {
+                            timeZone: 'UTC',
+                            dateStyle: 'medium',
+                          })
+                        : '-'}
                     </time>
                   </div>
-                  <p className={`shrink-0 font-semibold ${transaction.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}`}>
-                    {transaction.type === 'income' ? '+' : '-'}{rupiah(transaction.amount)}
-                  </p>
+                  <div className="text-right">
+                    <p
+                      className={`shrink-0 font-bold text-sm tracking-tight ${
+                        transaction.type === 'income'
+                          ? 'text-zinc-900 dark:text-zinc-100'
+                          : 'text-zinc-600 dark:text-zinc-400'
+                      }`}
+                    >
+                      {transaction.type === 'income' ? '+' : '-'}
+                      {formatRupiah(transaction.amount)}
+                    </p>
+                    <span className="inline-block mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                      {transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                    </span>
+                  </div>
                 </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
-    </main>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }
