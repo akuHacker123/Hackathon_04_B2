@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { getTransactions, TransactionDTO } from '@/lib/actions/transactions';
 import TransactionTable from '@/components/transactions/TransactionTable';
 import TransactionFormModal from '@/components/transactions/TransactionFormModal';
 import DeleteTransactionDialog from '@/components/transactions/DeleteTransactionDialog';
+import { FilterTabs } from '@/components/common/FilterTabs';
+import { type FilterPreference, getClientFilterCookie } from '@/lib/cookies';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionDTO[]>([]);
+  const [currentFilter, setCurrentFilter] = useState<FilterPreference>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,11 +21,11 @@ export default function TransactionsPage() {
   // State Modal Hapus (Delete)
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionDTO | null>(null);
 
-  const reloadTransactions = useCallback(async () => {
+  const fetchWithFilter = useCallback(async (filter: FilterPreference) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getTransactions();
+      const res = await getTransactions(filter);
       if (res.success && res.data) {
         setTransactions(res.data);
       } else {
@@ -35,12 +38,24 @@ export default function TransactionsPage() {
     }
   }, []);
 
+  const handleFilterChange = (filter: FilterPreference) => {
+    setCurrentFilter(filter);
+    fetchWithFilter(filter);
+  };
+
+  const reloadTransactions = useCallback(async () => {
+    await fetchWithFilter(currentFilter);
+  }, [fetchWithFilter, currentFilter]);
+
   useEffect(() => {
     let ignore = false;
 
     async function loadInitial() {
+      const initialCookieFilter = getClientFilterCookie();
+      setCurrentFilter(initialCookieFilter);
+
       try {
-        const res = await getTransactions();
+        const res = await getTransactions(initialCookieFilter);
         if (!ignore) {
           if (res.success && res.data) {
             setTransactions(res.data);
@@ -98,6 +113,17 @@ export default function TransactionsPage() {
         >
           + Tambah Transaksi
         </button>
+      </div>
+
+      {/* Filter Daftar Transaksi (FR-12, FR-19) */}
+      <div className="mb-6">
+        <Suspense fallback={<div className="h-10 w-64 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />}>
+          <FilterTabs
+            initialFilter={currentFilter}
+            onFilterChange={handleFilterChange}
+            syncUrl={true}
+          />
+        </Suspense>
       </div>
 
       {error && (

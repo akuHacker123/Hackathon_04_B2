@@ -1,5 +1,3 @@
-import { cookies } from "next/headers";
-
 /**
  * Filter Preference Type
  * FR-12: Filter transaksi berdasarkan jenis: Semua (all), Pemasukan (income), Pengeluaran (expense)
@@ -23,7 +21,7 @@ export const DEFAULT_FILTER: FilterPreference = "all";
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 /**
- * Sanitasi & Validasi Server-Side Nilai Cookie (BR-06 & Graceful Fallback)
+ * Sanitasi & Validasi Nilai Cookie (BR-06 & Graceful Fallback)
  * Memastikan nilai cookie aman dan valid ('all' | 'income' | 'expense').
  * Jika nilai cookie dirusak, dimanipulasi, atau undefined, otomatis fallback ke DEFAULT_FILTER ('all').
  */
@@ -35,20 +33,6 @@ export function parseFilterCookie(
   }
   // Graceful fallback jika cookie rusak/tidak valid
   return DEFAULT_FILTER;
-}
-
-/**
- * Helper Server-Side: Membaca nilai filter preferensi dari cookie request
- * Digunakan oleh Server Components (misal: halaman transaksi milik Agil atau dashboard)
- */
-export async function getServerFilterPreference(): Promise<FilterPreference> {
-  try {
-    const cookieStore = await cookies();
-    const rawValue = cookieStore.get(FILTER_COOKIE_NAME)?.value;
-    return parseFilterCookie(rawValue);
-  } catch {
-    return DEFAULT_FILTER;
-  }
 }
 
 /**

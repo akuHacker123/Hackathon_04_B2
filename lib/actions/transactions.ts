@@ -141,13 +141,16 @@ export interface TransactionDTO {
 }
 
 /**
- * FR-09: Melihat daftar seluruh transaksi pengguna
+ * FR-09 & FR-12: Melihat daftar seluruh transaksi pengguna & filtering jenis transaksi
  * Aturan Bisnis & Validasi:
  * - BR-02: Terikat mutlak pada user_id pengguna aktif
+ * - FR-12: Filter berdasarkan jenis: Semua ('all'), Pemasukan ('income'), atau Pengeluaran ('expense')
  * - Urutan kronologis terbalik (transaksi terbaru di atas)
  * - BR-08: Sanitasi query via Prisma ORM
  */
-export async function getTransactions(): Promise<ActionResponse<TransactionDTO[]>> {
+export async function getTransactions(
+  filterType?: 'all' | 'income' | 'expense'
+): Promise<ActionResponse<TransactionDTO[]>> {
   try {
     const user = await getCurrentUser();
     if (!user || !user.id) {
@@ -158,10 +161,19 @@ export async function getTransactions(): Promise<ActionResponse<TransactionDTO[]
       };
     }
 
+    const whereClause: {
+      userId: string;
+      type?: TransactionType;
+    } = {
+      userId: user.id,
+    };
+
+    if (filterType === 'income' || filterType === 'expense') {
+      whereClause.type = filterType as TransactionType;
+    }
+
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId: user.id,
-      },
+      where: whereClause,
       orderBy: [
         { transactionDate: 'desc' },
         { createdAt: 'desc' },

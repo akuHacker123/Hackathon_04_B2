@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   type FilterPreference,
-  FILTER_COOKIE_NAME,
   setClientFilterCookie,
   getClientFilterCookie,
   parseFilterCookie,
@@ -68,26 +67,17 @@ export function FilterTabs({
   const [isPending, startTransition] = useTransition();
 
   // Inisialisasi state filter: utamakan prop initialFilter, jika tidak ada baca dari cookie browser
-  const [activeFilter, setActiveFilter] = useState<FilterPreference>(() => {
+  const [internalFilter, setInternalFilter] = useState<FilterPreference>(() => {
     if (initialFilter) return parseFilterCookie(initialFilter);
     return parseFilterCookie(getClientFilterCookie());
   });
 
-  // Saat pertama kali mount, pastikan sync dengan cookie atau query param jika prop tidak diisi
-  useEffect(() => {
-    if (!initialFilter) {
-      const savedCookie = getClientFilterCookie();
-      setActiveFilter(savedCookie);
-      if (onFilterChange) {
-        onFilterChange(savedCookie);
-      }
-    }
-  }, [initialFilter, onFilterChange]);
+  const activeFilter = initialFilter ? parseFilterCookie(initialFilter) : internalFilter;
 
   const handleSelectFilter = (newFilter: FilterPreference) => {
     if (newFilter === activeFilter) return;
 
-    setActiveFilter(newFilter);
+    setInternalFilter(newFilter);
 
     // 1. Simpan ke Cookie Browser via Client Helper (FR-13, BR-06, AC-08)
     setClientFilterCookie(newFilter);

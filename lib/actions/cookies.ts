@@ -5,6 +5,7 @@ import {
   FILTER_COOKIE_NAME,
   parseFilterCookie,
   COOKIE_MAX_AGE,
+  DEFAULT_FILTER,
   type FilterPreference,
 } from "@/lib/cookies";
 
@@ -26,4 +27,18 @@ export async function setFilterPreferenceAction(
   });
 
   return validFilter;
+}
+
+/**
+ * Helper Server-Side: Membaca nilai filter preferensi dari cookie request
+ * Mengimplementasikan FR-14, BR-06, dan UC-04
+ */
+export async function getServerFilterPreference(): Promise<FilterPreference> {
+  try {
+    const cookieStore = await cookies();
+    const rawValue = cookieStore.get(FILTER_COOKIE_NAME)?.value;
+    return parseFilterCookie(rawValue);
+  } catch {
+    return DEFAULT_FILTER;
+  }
 }
