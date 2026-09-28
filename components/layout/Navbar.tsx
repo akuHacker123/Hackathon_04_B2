@@ -28,8 +28,8 @@ export function Navbar({ user, onLogout }: NavbarProps) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
         <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-sm transition-transform group-hover:scale-105 dark:bg-zinc-100 dark:text-zinc-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -43,7 +43,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
               ExpenseTracker
             </span>
           </Link>
@@ -58,8 +58,8 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   href={link.href}
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-zinc-100 text-emerald-700 dark:bg-zinc-800 dark:text-emerald-400"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-200"
+                      ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                   }`}
                 >
                   {link.label}
@@ -73,7 +73,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
         <div className="hidden md:flex items-center gap-4">
           {user && (
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col text-left">
@@ -85,12 +85,12 @@ export function Navbar({ user, onLogout }: NavbarProps) {
             </div>
           )}
 
-          {/* Logout Action (Sesuai UC-05 & AC-10) */}
+          {/* Logout Action */}
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
               onClick={onLogout}
-              className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 hover:text-rose-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3.5 text-xs font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
             >
               Logout
             </button>
@@ -143,8 +143,8 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`rounded-lg px-3 py-2 text-sm font-medium ${
                     isActive
-                      ? "bg-zinc-100 text-emerald-700 dark:bg-zinc-800 dark:text-emerald-400"
-                      : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   }`}
                 >
                   {link.label}
@@ -164,7 +164,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                 <button
                   type="submit"
                   onClick={onLogout}
-                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                 >
                   Logout
                 </button>
