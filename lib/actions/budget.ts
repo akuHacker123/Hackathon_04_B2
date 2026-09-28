@@ -13,20 +13,12 @@ export interface ActionResponse<T = unknown> {
   status?: number;
 }
 
-export interface MonthlyBudgetData {
-  month: string; // 'YYYY-MM'
-  budgetAmount: string | null;
-  totalExpense: string;
-  remaining: string | null;
-  percentage: number | null;
-  isOverBudget: boolean;
-  hasBudget: boolean;
-}
-
-export interface SaveMonthlyBudgetInput {
-  month: string;
-  amount: number | string;
-}
+import {
+  MonthlyBudgetData,
+  SaveMonthlyBudgetInput,
+  parseMonthRange,
+  getCurrentMonthKey,
+} from '@/lib/utils/budget';
 
 /**
  * Format string bulan YYYY-MM menjadi rentang Date UTC untuk hari pertama dan bulan berikutnya.
