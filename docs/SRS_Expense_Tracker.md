@@ -11,10 +11,12 @@ Sistem mencakup:
 * Dashboard ringkasan kondisi keuangan pengguna (saldo saat ini, total pemasukan, total pengeluaran, dan daftar transaksi terbaru).
 * Manajemen transaksi keuangan lengkap (operasi CRUD: tambah, lihat, ubah, dan hapus) dengan klasifikasi pemasukan (*income*) dan pengeluaran (*expense*).
 * Fitur penyaringan (*filtering*) daftar transaksi berdasarkan jenis transaksi.
+* Anggaran bulanan per pengguna, beserta total anggaran, pengeluaran bulan terpilih, sisa anggaran, indikator penggunaan, dan peringatan saat terlampaui.
+* Pembaruan daftar/filter transaksi dan pengaturan anggaran tanpa memuat ulang halaman melalui request asinkron (AJAX/Server Actions).
 * Penggunaan **cookies** untuk menyimpan preferensi pengguna di sisi peramban (misalnya filter transaksi terakhir atau preferensi tampilan).
 
 **Batasan Luar Lingkup (Out of Scope):**  
-Sistem tidak mencakup integrasi *open banking* / mutasi bank otomatis, integrasi *payment gateway*, konversi multi-mata uang (*multi-currency*), pembatasan anggaran berkala (*budgeting limits & alerts*), manajemen utang-piutang lanjutan, ekspor/impor berkas (PDF/Excel), serta audit log lanjutan.
+Sistem tidak mencakup integrasi *open banking* / mutasi bank otomatis, integrasi *payment gateway*, konversi multi-mata uang (*multi-currency*), pemblokiran transaksi saat anggaran terlampaui, manajemen utang-piutang lanjutan, ekspor/impor berkas (PDF/Excel), serta audit log lanjutan.
 
 ---
 
@@ -23,7 +25,7 @@ Sistem tidak mencakup integrasi *open banking* / mutasi bank otomatis, integrasi
 | Aktor | Hak |
 |---|---|
 | **Guest** | Mengakses halaman publik (landing page), melakukan registrasi akun baru, dan melakukan login ke dalam sistem. Tidak memiliki akses ke data keuangan atau halaman internal. |
-| **Pengguna Terautentikasi (User)** | Mengakses dashboard pribadi, mengelola transaksi keuangan miliknya sendiri (tambah, lihat, ubah, hapus), memfilter transaksi, mengatur preferensi via cookie, dan melakukan logout. Tidak dapat melihat atau mengelola data milik pengguna lain. |
+| **Pengguna Terautentikasi (User)** | Mengakses dashboard pribadi, mengelola transaksi dan anggaran bulanan miliknya sendiri, memfilter transaksi, mengatur preferensi via cookie, dan melakukan logout. Tidak dapat melihat atau mengelola data milik pengguna lain. |
 
 ---
 
@@ -46,6 +48,11 @@ Sistem tidak mencakup integrasi *open banking* / mutasi bank otomatis, integrasi
 | **FR-13** | Sistem menggunakan **cookies** pada peramban pengguna untuk menyimpan minimal satu preferensi pengguna (misalnya: filter transaksi terakhir yang dipilih atau preferensi tema antarmuka). |
 | **FR-14** | Saat pengguna membuka kembali halaman transaksi, sistem membaca nilai preferensi dari cookie untuk menerapkan filter secara otomatis. |
 | **FR-15** | Seluruh skema database dapat dibangun ulang melalui *migration* otomatis tanpa manipulasi tabel manual. |
+| **FR-16** | Pengguna dapat menetapkan atau memperbarui satu nominal anggaran positif untuk setiap bulan kalender (`YYYY-MM`). Bulan yang belum diatur ditampilkan sebagai belum memiliki anggaran. |
+| **FR-17** | Pengguna dapat memilih bulan dan melihat anggaran, total transaksi pengeluaran pada bulan tersebut, sisa anggaran, serta persentase penggunaannya. Dashboard juga menampilkan ringkasan anggaran bulan terpilih. |
+| **FR-18** | Sistem menampilkan indikator penggunaan anggaran dan peringatan ketika pengeluaran bulan terpilih melampaui anggaran. Peringatan hanya informatif; transaksi tetap dapat dicatat. |
+| **FR-19** | Filter daftar transaksi dan penyimpanan anggaran memperbarui tampilan tanpa reload penuh. Preferensi filter tetap tersimpan untuk kunjungan berikutnya. |
+| **FR-20** | Halaman publik dan internal menggunakan palet monokrom hitam putih yang konsisten; label UI memakai bahasa pengguna dan tidak menampilkan kode requirement seperti `BR-`, `FR-`, `UC-`, atau `AC-`. |
 
 ---
 
@@ -62,6 +69,10 @@ Sistem tidak mencakup integrasi *open banking* / mutasi bank otomatis, integrasi
 | **BR-07** | **Proteksi Form Mutasi**: Semua form mutasi (POST/PUT/PATCH/DELETE) wajib menyertakan proteksi terhadap serangan Cross-Site Request Forgery (CSRF token). |
 | **BR-08** | **Sanitasi Query**: Semua query ke basis data wajib menggunakan ORM/Query Builder dengan prepared statements berparameter untuk mencegah SQL Injection. |
 | **BR-09** | **Penghapusan Bersih (Cascade)**: Jika akun pengguna dihapus, seluruh data transaksi milik pengguna tersebut ikut terhapus otomatis melalui foreign key cascade. |
+| **BR-10** | **Kepemilikan Anggaran**: Setiap anggaran terikat pada `user_id` sesi aktif. Kombinasi pengguna dan bulan unik; pengguna hanya boleh membaca dan mengubah anggarannya sendiri. Anggaran ikut terhapus saat akun dihapus. |
+| **BR-11** | **Perhitungan Anggaran**: Pemakaian bulan terpilih adalah jumlah `amount` transaksi `expense` milik pengguna dengan `transaction_date` dalam bulan itu. Transaksi `income` tidak dihitung. Sisa = anggaran - pemakaian; nilainya boleh negatif. Persentase = pemakaian / anggaran x 100 dan boleh di atas 100%. |
+| **BR-12** | **Validasi Anggaran**: Bulan harus valid dalam format `YYYY-MM`; nominal wajib angka positif dengan paling banyak dua angka desimal dan muat dalam `DECIMAL(15,2)`. Semua perhitungan moneter di server memakai desimal, bukan `float`. |
+| **BR-13** | **Migrasi Aman**: Perubahan skema harus memakai migrasi baru yang additive. Dilarang menghapus, mereset, atau menimpa tabel/kolom/data yang sudah ada. Migrasi tidak boleh mengedit migrasi yang telah diterapkan. Seeder hanya untuk development, idempotent dengan insert-if-absent, tidak memperbarui record lama, dan harus gagal dengan aman jika identitas fixture bertabrakan dengan data lain. |
 
 ---
 
@@ -75,6 +86,7 @@ Setiap operasi mutasi transaksi keuangan dan autentikasi pengguna dijalankan den
 | **Penambahan Transaksi** | Validasi input transaksi -> ikat dengan `user_id` sesi aktif -> simpan baris `transactions`. |
 | **Pembaruan Transaksi** | Verifikasi otorisasi kepemilikan (`transaction.user_id == auth.user_id`) -> validasi input baru -> simpan perubahan pada `transactions`. |
 | **Penghapusan Transaksi** | Verifikasi otorisasi kepemilikan (`transaction.user_id == auth.user_id`) -> eksekusi hard delete pada baris transaksi. |
+| **Penetapan Anggaran** | Validasi sesi, bulan, dan nominal -> simpan/perbarui anggaran berdasarkan pasangan `user_id` dan bulan secara atomik. |
 | **Penghapusan Akun Pengguna** | Hapus baris `users`; Foreign Key constraint dengan `ON DELETE CASCADE` secara otomatis dan atomik membersihkan seluruh data transaksi terkait. |
 
 ---
@@ -87,12 +99,15 @@ Setiap operasi mutasi transaksi keuangan dan autentikasi pengguna dijalankan den
 |---|---|---|
 | **`users`** | `id` (PK, BigInt/UUID)<br>`name` (VARCHAR 255)<br>`email` (VARCHAR 255, UNIQUE)<br>`password` (VARCHAR 255 - hashed)<br>`remember_token` (VARCHAR 100, nullable)<br>`created_at`, `updated_at` (TIMESTAMP) | Menyimpan identitas akun pengguna. Satu pengguna memiliki banyak transaksi (1:N). |
 | **`transactions`** | `id` (PK, BigInt/UUID)<br>`user_id` (FK -> `users.id`)<br>`title` (VARCHAR 255)<br>`amount` (DECIMAL(15, 2))<br>`type` (ENUM: `'income'`, `'expense'`)<br>`transaction_date` (DATE)<br>`notes` (TEXT, nullable)<br>`created_at`, `updated_at` (TIMESTAMP) | Menyimpan riwayat pemasukan dan pengeluaran. Terikat mutlak pada satu akun pengguna. |
+| **`monthly_budgets`** | `id` (UUID, PK)<br>`user_id` (UUID, FK -> `users.id`, NOT NULL)<br>`month` (DATE, wajib hari pertama bulan)<br>`amount` (DECIMAL(15,2), NOT NULL, CHECK > 0)<br>`created_at`, `updated_at` (TIMESTAMP(3)) | Satu anggaran untuk satu pengguna dan satu bulan. Constraint unik `(user_id, month)`. Nominal anggaran disimpan; pemakaian dan sisa dihitung dari transaksi, bukan disimpan ulang. |
 
 ### Foreign Key dan Indexing:
 * **Foreign Key**: `transactions.user_id -> users.id` dengan konfigurasi `ON DELETE CASCADE` dan `ON UPDATE CASCADE`.
+* **Foreign Key anggaran**: `monthly_budgets.user_id -> users.id` dengan `ON DELETE CASCADE` dan `ON UPDATE CASCADE`.
 * **Indeks Performa**:
   * Indeks gabungan `(user_id, transaction_date DESC)` untuk mempercepat sortir kronologis dan agregasi saldo.
   * Indeks pada kolom `transactions.type` untuk optimasi filter jenis transaksi.
+  * Constraint unik `(user_id, month)` pada `monthly_budgets`; indeks transaksi pengguna dan tanggal dipakai untuk pengeluaran bulan terpilih.
 
 ---
 
@@ -107,6 +122,7 @@ Setiap operasi mutasi transaksi keuangan dan autentikasi pengguna dijalankan den
 | Mengubah Transaksi Sendiri | Tidak | Ya | Tidak |
 | Menghapus Transaksi Sendiri | Tidak | Ya | Tidak |
 | Mengakses / Ubah Transaksi Orang Lain | Tidak | Tidak | **Tidak (HTTP 403 Forbidden)** |
+| Melihat / Mengatur Anggaran Bulanan | Tidak | Ya | Tidak (hanya anggaran sendiri) |
 | Mengatur Cookie Preferensi (Filter/Tema) | Tidak | Ya | Ya (Di browser masing-masing) |
 | Melakukan Logout | Tidak | Ya | Ya |
 
@@ -127,6 +143,11 @@ Setiap operasi mutasi transaksi keuangan dan autentikasi pengguna dijalankan den
 | **AC-09** | **Given** cookie preferensi filter telah ada di browser, **when** pengguna membuka kembali halaman transaksi pada kunjungan berikutnya, **then** sistem otomatis menerapkan filter berdasarkan nilai cookie yang tersimpan. |
 | **AC-10** | **Given** pengguna dalam sesi aktif, **when** menekan tombol Logout, **then** data sesi di server dihapus, cookie sesi di browser dibersihkan, dan pengguna dialihkan ke halaman login. |
 | **AC-11** | **Given** guest yang belum login, **when** mencoba mengakses langsung URL `/dashboard` atau `/transactions`, **then** sistem mencegat request dan mengarahkan guest ke halaman login. |
+| **AC-12** | **Given** pengguna login, **when** menetapkan anggaran positif untuk bulan terpilih, **then** anggaran tersimpan untuk pengguna dan bulan tersebut; penyimpanan ulang memperbarui baris yang sama tanpa duplikat. |
+| **AC-13** | **Given** transaksi pengeluaran pada bulan terpilih, **when** pengguna melihat dashboard, **then** total anggaran, pemakaian, sisa, dan indikator dihitung hanya dari transaksinya pada bulan itu; saat pemakaian melampaui anggaran, alert terlihat. |
+| **AC-14** | **Given** dua pengguna memiliki transaksi dan anggaran, **when** salah satu membaca atau mengirim aksi dengan ID pengguna lain, **then** data pengguna lain tidak terlihat dan tidak berubah. |
+| **AC-15** | **Given** pengguna memilih filter transaksi, bulan anggaran, atau menyimpan anggaran, **when** hasil tersedia, **then** bagian terkait berubah tanpa reload penuh; pilihan filter tersimpan di cookie. |
+| **AC-16** | **Given** pengguna membuka laman awal, dashboard, dan transaksi, **then** tampilan memakai palet monokrom hitam putih dan tidak ada kode requirement yang tampak. |
 
 ---
 
@@ -151,6 +172,10 @@ Pada halaman daftar transaksi, pengguna memilih opsi filter "Pengeluaran". Siste
 
 ### UC-05 Pengakhiran Sesi (Logout)
 Pengguna menekan tombol "Logout". Sistem mengirimkan request POST (dengan token CSRF) ke endpoint logout. Server menghapus sesi dari penyimpanan sesi, menginvalidasi cookie sesi di peramban pengguna, dan mengarahkan pengguna kembali ke halaman login.
+
+### UC-06 Menetapkan dan Memantau Anggaran Bulanan
+
+Pengguna memilih bulan, menetapkan nominal anggaran, lalu melihat total pengeluaran dari transaksi miliknya pada bulan tersebut. Sistem menghitung sisa dan persentase penggunaan secara dinamis. Jika pengeluaran melampaui anggaran, sistem menampilkan peringatan tanpa menolak transaksi. Pergantian bulan dan penyimpanan anggaran memperbarui tampilan secara asinkron tanpa reload penuh.
 
 ---
 

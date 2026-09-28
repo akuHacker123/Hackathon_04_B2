@@ -8,6 +8,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "node node_modules/jiti/lib/jiti-cli.mjs prisma/seed.ts",
   },
   engine: "classic",
   datasource: {
