@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import BudgetSection from './BudgetSection';
-import { MonthlyBudgetData } from '@/lib/actions/budget';
+import { MonthlyBudgetData } from '@/lib/utils/budget';
+
 
 type Transaction = {
   id: string;
