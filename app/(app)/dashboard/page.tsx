@@ -1,14 +1,42 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/get-user';
 import { getDashboardData } from '@/lib/actions/dashboard';
+import { getMonthlyBudget, getCurrentMonthKey, MonthlyBudgetData } from '@/lib/actions/budget';
 import DashboardView from '@/components/dashboard/DashboardView';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
   if (!user) redirect('/login');
 
-  const dashboard = await getDashboardData(user.id);
+  const currentMonth = getCurrentMonthKey();
+  const [dashboard, budgetResult] = await Promise.all([
+    getDashboardData(),
+    getMonthlyBudget(currentMonth),
+  ]);
 
-  return <DashboardView name={user.name} {...dashboard} />;
+  const initialBudgetData: MonthlyBudgetData = budgetResult.data ?? {
+    month: currentMonth,
+    budgetAmount: null,
+    totalExpense: '0.00',
+    remaining: null,
+    percentage: null,
+    isOverBudget: false,
+    hasBudget: false,
+  };
+
+  return (
+    <AppLayout user={{ name: user.name, email: user.email }}>
+      <DashboardView
+        name={user.name}
+        balance={dashboard.balance}
+        totalIncome={dashboard.totalIncome}
+        totalExpense={dashboard.totalExpense}
+        isDeficit={dashboard.isDeficit}
+        recentTransactions={dashboard.recentTransactions}
+        initialBudgetData={initialBudgetData}
+      />
+    </AppLayout>
+  );
 }
