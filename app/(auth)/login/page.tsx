@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { loginAction } from "../actions";
 import { LoginForm } from "./LoginForm";
+import { getCurrentUser } from "@/lib/auth/get-user";
 
 type LoginPageProps = { searchParams: Promise<{ registered?: string }> };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  if (await getCurrentUser()) redirect("/dashboard");
+
   const { registered } = await searchParams;
 
   return (

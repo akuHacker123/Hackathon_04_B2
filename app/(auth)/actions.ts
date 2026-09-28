@@ -4,7 +4,11 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { CSRF_COOKIE_NAME, isValidCsrfToken } from "@/lib/auth/csrf";
+import {
+  CSRF_COOKIE_NAME,
+  isSameOriginRequest,
+  isValidCsrfToken,
+} from "@/lib/auth/csrf";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import prisma from "@/lib/prisma";
 
@@ -22,7 +26,7 @@ async function getRequestSecurityError(formData: FormData): Promise<string | nul
 
   // Server Actions already enforce origin checks; this explicit guard also
   // protects these credential-changing mutations if their transport changes.
-  if (!origin || !host || new URL(origin).host !== host) {
+  if (!isSameOriginRequest(origin, host)) {
     return "Permintaan tidak dapat diverifikasi. Silakan muat ulang halaman.";
   }
 
