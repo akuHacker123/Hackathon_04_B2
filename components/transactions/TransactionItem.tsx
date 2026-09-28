@@ -64,7 +64,7 @@ export default function TransactionItem({
             <button
               type="button"
               onClick={() => onEdit(transaction)}
-              className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              className="text-xs font-medium text-zinc-900 underline hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300"
             >
               Ubah
             </button>

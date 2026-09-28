@@ -55,7 +55,7 @@ export default function DeleteTransactionDialog({
           Konfirmasi Hapus Transaksi
         </h3>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini bersifat permanen (*hard delete*) dan data tidak dapat dikembalikan.
+          Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini bersifat permanen dan data tidak dapat dikembalikan.
         </p>
 
         <div className="my-4 rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-800">
