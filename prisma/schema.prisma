@@ -27,6 +27,7 @@ model User {
 
   transactions  Transaction[]
   sessions      Session[]
+  monthlyBudgets MonthlyBudget[]
 
   @@map("users")
 }
@@ -60,4 +61,18 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+}
+
+model MonthlyBudget {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  month     DateTime @db.Date
+  amount    Decimal  @db.Decimal(15, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, month])
+  @@map("monthly_budgets")
 }
