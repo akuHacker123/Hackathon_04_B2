@@ -128,18 +128,18 @@ export function FilterTabs({
             onClick={() => handleSelectFilter(option.value)}
             className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
               isActive
-                ? "bg-white text-emerald-700 shadow-sm dark:bg-zinc-900 dark:text-emerald-400"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
             } disabled:opacity-60`}
           >
             {option.value === "income" && (
-              <span className="mr-1.5 h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+              <span className={`mr-1.5 h-2 w-2 rounded-full inline-block ${isActive ? "bg-white dark:bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"}`} />
             )}
             {option.value === "expense" && (
-              <span className="mr-1.5 h-2 w-2 rounded-full bg-rose-500 inline-block" />
+              <span className={`mr-1.5 h-2 w-2 rounded-full inline-block ${isActive ? "bg-zinc-300 dark:bg-zinc-600" : "bg-zinc-400 dark:bg-zinc-500"}`} />
             )}
             {option.value === "all" && (
-              <span className="mr-1.5 h-2 w-2 rounded-full bg-zinc-400 inline-block" />
+              <span className={`mr-1.5 h-2 w-2 rounded-full inline-block ${isActive ? "bg-zinc-400 dark:bg-zinc-500" : "bg-zinc-300 dark:bg-zinc-600"}`} />
             )}
             {option.label}
           </button>
