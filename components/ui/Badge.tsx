@@ -15,15 +15,15 @@ export function Badge({
 
   const variantStyles = {
     default:
-      "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
+      "bg-zinc-100 text-zinc-800 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
     success:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+      "bg-zinc-900 text-white border border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100",
     warning:
-      "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+      "bg-zinc-200 text-zinc-900 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
     danger:
-      "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800",
+      "bg-zinc-900 text-white border border-zinc-800 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-300",
     outline:
-      "border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
+      "border border-zinc-400 text-zinc-800 dark:border-zinc-600 dark:text-zinc-200",
   };
 
   return (
